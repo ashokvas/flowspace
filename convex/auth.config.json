@@ -1,0 +1,8 @@
+{
+  "providers": [
+    {
+      "domain": "https://clerk.com",
+      "applicationID": "convex"
+    }
+  ]
+}
