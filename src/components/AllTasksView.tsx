@@ -38,7 +38,7 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
 
   const cycleStatus = async (task: any) => {
     const cycle = { todo: "inprog", inprog: "done", done: "todo" };
-    await updateTask({ id: task._id, status: cycle[task.status as keyof typeof cycle] ?? "todo" });
+    await updateTask({ id: task._id, status: (cycle[task.status as keyof typeof cycle] ?? "todo") as "todo" | "inprog" | "done" });
   };
 
   const toggleArchive = async (taskId: Id<"tasks">, currentArchived: boolean) => {
