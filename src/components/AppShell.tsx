@@ -192,7 +192,7 @@ function NavItem({ children, active, onClick, icon, indent }: {
   return (
     <button onClick={onClick} style={{
       display: "flex", alignItems: "center", gap: 9, padding: "8px 10px",
-      borderRadius: 8, cursor: "pointer", fontSize: 13.5,
+      cursor: "pointer", fontSize: 13.5,
       color: active ? "var(--accent2)" : "var(--text2)",
       background: active ? "var(--accent-glow)" : "transparent",
       fontWeight: active ? 500 : 400,
