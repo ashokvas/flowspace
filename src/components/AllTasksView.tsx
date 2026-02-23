@@ -219,12 +219,12 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
 
                 {/* Project */}
                 <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {projName}
+                  {(task as any).projectName ?? "—"}
                 </div>
 
                 {/* Area - we'll show a placeholder since we'd need to fetch all areas */}
                 <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {task.areaId ? "Area" : "—"}
+                  {(task as any).areaName ?? "—"}
                 </div>
 
                 {/* Archive checkbox + delete */}

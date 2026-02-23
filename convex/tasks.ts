@@ -15,11 +15,23 @@ export const listByArea = query({
 export const listByUser = query({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    return await ctx.db
+    const tasks = await ctx.db
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .collect();
+
+    return Promise.all(
+      tasks.map(async (task) => {
+        const area = task.areaId ? await ctx.db.get(task.areaId) : null;
+        const project = task.projectId ? await ctx.db.get(task.projectId) : null;
+        return {
+          ...task,
+          areaName: area?.name ?? null,
+          projectName: project?.name ?? null,
+        };
+      })
+    );
   },
 });
 
