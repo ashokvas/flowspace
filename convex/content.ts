@@ -112,3 +112,51 @@ export const removeResource = mutation({
     await ctx.db.delete(id);
   },
 });
+
+
+// ── Note File Attachments ──────────────────────────────────────────────────
+
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const attachFileToNote = mutation({
+  args: {
+    noteId: v.id("notes"),
+    storageId: v.string(),
+    name: v.string(),
+    type: v.string(),
+    size: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.noteId);
+    if (!note) throw new Error("Note not found");
+    await ctx.db.patch(args.noteId, {
+      attachments: [
+        ...(note.attachments ?? []),
+        { storageId: args.storageId, name: args.name, type: args.type, size: args.size, uploadedAt: Date.now() },
+      ],
+    });
+  },
+});
+
+export const removeAttachmentFromNote = mutation({
+  args: { noteId: v.id("notes"), storageId: v.string() },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.noteId);
+    if (!note) throw new Error("Note not found");
+    await ctx.storage.delete(args.storageId as any);
+    await ctx.db.patch(args.noteId, {
+      attachments: (note.attachments ?? []).filter((a) => a.storageId !== args.storageId),
+    });
+  },
+});
+
+export const getFileUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId as any);
+  },
+});

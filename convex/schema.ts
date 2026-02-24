@@ -42,7 +42,14 @@ export default defineSchema({
     areaId: v.optional(v.id("areas")),
     title: v.string(),
     content: v.optional(v.string()),
-    createdAt: v.number(),
+    attachments: v.optional(v.array(v.object({
+      storageId: v.string(),
+      name: v.string(),
+      type: v.string(),
+      size: v.number(),
+      uploadedAt: v.number(),
+    }))),
+        createdAt: v.number(),
   })
     .index("by_area", ["areaId"])
     .index("by_project", ["projectId"])
