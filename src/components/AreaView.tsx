@@ -138,8 +138,22 @@ export function AreaView({ areaId, projectId, userId, onNavigate }: {
             <Empty emoji="✅" title={showArchived ? "No archived tasks" : "No tasks yet"} subtitle={showArchived ? "" : "Add your first task above"} />
           ) : (
             <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
+              <style>{`
+                .area-table-header { display: grid; }
+                .area-row-desktop { display: grid; }
+                .area-row-mobile { display: none; }
+                @media (max-width: 640px) {
+                  .area-table-header { display: none !important; }
+                  .area-row-desktop { display: none !important; }
+                  .area-row-mobile { display: flex !important; }
+                }
+              `}</style>
+
               {/* Table Header */}
-              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 120px 100px 200px 200px 80px", gap: 12, padding: "12px 16px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <div
+                className="area-table-header"
+                style={{ gridTemplateColumns: "40px 1fr 120px 100px 200px 200px 80px", gap: 12, padding: "12px 16px", background: "var(--surface2)", borderBottom: "1px solid var(--border)", fontSize: 11, fontWeight: 600, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.5px" }}
+              >
                 <div></div>
                 <div>Task</div>
                 <div>Due Date</div>
@@ -154,106 +168,193 @@ export function AreaView({ areaId, projectId, userId, onNavigate }: {
                 const isDone = task.status === "done";
                 const due = task.dueDate ? formatDue(task.dueDate) : null;
                 return (
-                  <div
-                    key={task._id}
-                    style={{
-                      display: "grid", gridTemplateColumns: "40px 1fr 120px 100px 200px 200px 80px", gap: 12,
-                      padding: "14px 16px", borderBottom: "1px solid var(--border)",
-                      alignItems: "center", opacity: isDone ? 0.6 : 1,
-                      transition: "background 0.15s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface2)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    {/* Status checkbox */}
-                    <button
-                      onClick={() => cycleStatus(task)}
+                  <div key={task._id} style={{ borderBottom: "1px solid var(--border)" }}>
+
+                    {/* ── DESKTOP ROW ── */}
+                    <div
+                      className="area-row-desktop"
                       style={{
-                        width: 20, height: 20, borderRadius: "50%",
-                        border: isDone ? "none" : "2px solid var(--border2)",
-                        background: isDone ? "var(--done)" : "transparent",
-                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                        transition: "all 0.2s",
+                        gridTemplateColumns: "40px 1fr 120px 100px 200px 200px 80px", gap: 12,
+                        padding: "14px 16px",
+                        alignItems: "center", opacity: isDone ? 0.6 : 1,
+                        transition: "background 0.15s",
                       }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface2)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
-                    </button>
-
-                    {/* Task title */}
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        onClick={() => openEdit(task)}
-                        style={{
-                          fontSize: 14, fontWeight: 500, cursor: "pointer",
-                          textDecoration: isDone ? "line-through" : "none",
-                          color: isDone ? "var(--text3)" : "var(--text)",
-                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        }}
-                      >
-                        {task.title}
-                      </div>
-                      {task.notes && (
-                        <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {task.notes}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Due date */}
-                    <div style={{ fontSize: 12, color: due?.color ?? "var(--text3)" }}>
-                      {due?.label ?? "—"}
-                    </div>
-
-                    {/* Priority */}
-                    <div>
-                      {task.priority ? <PriorityBadge p={task.priority} /> : <span style={{ fontSize: 12, color: "var(--text3)" }}>—</span>}
-                    </div>
-
-                    {/* Project */}
-                    <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {project?.name ?? "—"}
-                    </div>
-
-                    {/* Area */}
-                    <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {area.name}
-                    </div>
-
-                    {/* Archive checkbox */}
-                    <div style={{ display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
-                      <label style={{ display: "flex", cursor: "pointer", margin: 0, padding: 0 }}>
-                        <input
-                          type="checkbox"
-                          checked={task.archived ?? false}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleArchive(task._id, task.archived ?? false);
-                          }}
-                          style={{ cursor: "pointer", width: 16, height: 16, margin: 0, padding: 0 }}
-                        />
-                      </label>
+                      {/* Status checkbox */}
                       <button
-                        onClick={() => {
-                          if (confirm(`Delete "${task.title}"? This cannot be undone.`)) {
-                            removeTask({ id: task._id });
-                          }
+                        onClick={() => cycleStatus(task)}
+                        style={{
+                          width: 20, height: 20, borderRadius: "50%",
+                          border: isDone ? "none" : "2px solid var(--border2)",
+                          background: isDone ? "var(--done)" : "transparent",
+                          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                          transition: "all 0.2s",
                         }}
-                        style={{ 
-                          background: "rgba(247,112,106,0.1)", 
-                          border: "1px solid rgba(247,112,106,0.3)", 
-                          color: "var(--high)", 
-                          cursor: "pointer", 
-                          padding: "4px 6px", 
-                          borderRadius: 6,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
-                        }}
-                        title="Delete task"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                        {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
                       </button>
+
+                      {/* Task title */}
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          onClick={() => openEdit(task)}
+                          style={{
+                            fontSize: 14, fontWeight: 500, cursor: "pointer",
+                            textDecoration: isDone ? "line-through" : "none",
+                            color: isDone ? "var(--text3)" : "var(--text)",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}
+                        >
+                          {task.title}
+                        </div>
+                        {task.notes && (
+                          <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {task.notes}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Due date */}
+                      <div style={{ fontSize: 12, color: due?.color ?? "var(--text3)" }}>
+                        {due?.label ?? "—"}
+                      </div>
+
+                      {/* Priority */}
+                      <div>
+                        {task.priority ? <PriorityBadge p={task.priority} /> : <span style={{ fontSize: 12, color: "var(--text3)" }}>—</span>}
+                      </div>
+
+                      {/* Project */}
+                      <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {project?.name ?? "—"}
+                      </div>
+
+                      {/* Area */}
+                      <div style={{ fontSize: 12, color: "var(--text2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {area.name}
+                      </div>
+
+                      {/* Archive + Delete */}
+                      <div style={{ display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
+                        <label style={{ display: "flex", cursor: "pointer", margin: 0, padding: 0 }}>
+                          <input
+                            type="checkbox"
+                            checked={task.archived ?? false}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleArchive(task._id, task.archived ?? false);
+                            }}
+                            style={{ cursor: "pointer", width: 16, height: 16, margin: 0, padding: 0 }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete "${task.title}"? This cannot be undone.`)) {
+                              removeTask({ id: task._id });
+                            }
+                          }}
+                          style={{
+                            background: "rgba(247,112,106,0.1)",
+                            border: "1px solid rgba(247,112,106,0.3)",
+                            color: "var(--high)",
+                            cursor: "pointer",
+                            padding: "4px 6px",
+                            borderRadius: 6,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                          title="Delete task"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                        </button>
+                      </div>
                     </div>
+
+                    {/* ── MOBILE CARD ── */}
+                    <div
+                      className="area-row-mobile"
+                      style={{ flexDirection: "column", gap: 0, padding: "14px 16px", opacity: isDone ? 0.6 : 1 }}
+                    >
+                      {/* Row 1: checkbox + title/notes */}
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                        <div style={{ paddingTop: 2, flexShrink: 0 }}>
+                          <button
+                            onClick={() => cycleStatus(task)}
+                            style={{
+                              width: 20, height: 20, borderRadius: "50%",
+                              border: isDone ? "none" : "2px solid var(--border2)",
+                              background: isDone ? "var(--done)" : "transparent",
+                              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "all 0.2s",
+                            }}
+                          >
+                            {isDone && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                          </button>
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            onClick={() => openEdit(task)}
+                            style={{
+                              fontSize: 14, fontWeight: 500, cursor: "pointer",
+                              textDecoration: isDone ? "line-through" : "none",
+                              color: isDone ? "var(--text3)" : "var(--text)",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {task.title}
+                          </div>
+                          {task.notes && (
+                            <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4, wordBreak: "break-word", lineHeight: 1.4 }}>
+                              {task.notes}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Row 2: meta chips + actions */}
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10, marginLeft: 32, alignItems: "center" }}>
+                        {due && <span style={{ fontSize: 11, color: due.color, fontWeight: 500 }}>{due.label}</span>}
+                        {task.priority && <PriorityBadge p={task.priority} />}
+                        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                          <label style={{ display: "flex", cursor: "pointer", margin: 0, padding: 0 }}>
+                            <input
+                              type="checkbox"
+                              checked={task.archived ?? false}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleArchive(task._id, task.archived ?? false);
+                              }}
+                              style={{ cursor: "pointer", width: 16, height: 16, margin: 0, padding: 0 }}
+                            />
+                          </label>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Delete "${task.title}"? This cannot be undone.`)) {
+                                removeTask({ id: task._id });
+                              }
+                            }}
+                            style={{
+                              background: "rgba(247,112,106,0.1)",
+                              border: "1px solid rgba(247,112,106,0.3)",
+                              color: "var(--high)",
+                              cursor: "pointer",
+                              padding: "4px 6px",
+                              borderRadius: 6,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                            title="Delete task"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 );
               })}
