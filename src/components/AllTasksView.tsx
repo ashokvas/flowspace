@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { View } from "./AppShell";
-import { Btn, Empty } from "./ui";
+import { Btn, Empty, Modal, FormGroup, Input, Textarea, Select } from "./ui";
 
 type Filters = {
   priority: string; status: string; due: string;
@@ -20,6 +20,38 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
   
   const [filters, setFilters] = useState<Filters>({ priority: "all", status: "all", due: "all", projectId: "all", tag: "all", groupBy: "status" });
   const [showArchived, setShowArchived] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [editTask, setEditTask] = useState<Id<"tasks"> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Form state
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<"todo" | "inprog" | "done">("todo");
+  const [priority, setPriority] = useState<"high" | "med" | "low" | "">("");
+  const [dueDate, setDueDate] = useState("");
+  const [tags, setTags] = useState("");
+
+  const openEdit = (task: any) => {
+    setTitle(task.title); setNotes(task.notes ?? ""); setStatus(task.status ?? "todo");
+    setPriority(task.priority ?? ""); setDueDate(task.dueDate ?? "");
+    setTags((task.tags ?? []).join(", "));
+    setEditTask(task._id); setShowModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!title.trim()) return;
+    setSaving(true);
+    const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
+    await updateTask({
+      id: editTask!,
+      title: title.trim(), notes: notes.trim() || undefined,
+      status, priority: (priority as any) || undefined,
+      dueDate: dueDate || undefined, tags: tagList.length ? tagList : undefined,
+    });
+    setSaving(false); setShowModal(false);
+  };
 
   const setFilter = (k: keyof Filters, v: string) => setFilters((f) => ({ ...f, [k]: v }));
 
@@ -167,7 +199,7 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
             <div>Due Date</div>
             <div>Priority</div>
             <div>Project</div>
-            <div style={{ textAlign: "center" }}>Archive</div>
+            <div style={{ textAlign: "center" }}>Actions</div>
           </div>
 
           {filtered.map((task) => {
@@ -199,6 +231,7 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
                     archived={task.archived ?? false}
                     onArchive={() => toggleArchive(task._id, task.archived ?? false)}
                     onDelete={() => { if (confirm(`Delete "${task.title}"?`)) removeTask({ id: task._id }); }}
+                    onEdit={() => openEdit(task)}
                   />
                 </div>
 
@@ -257,6 +290,7 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
                         archived={task.archived ?? false}
                         onArchive={() => toggleArchive(task._id, task.archived ?? false)}
                         onDelete={() => { if (confirm(`Delete "${task.title}"?`)) removeTask({ id: task._id }); }}
+                        onEdit={() => openEdit(task)}
                       />
                     </div>
                   </div>
@@ -266,6 +300,47 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
             );
           })}
         </div>
+      )}
+
+      {showModal && (
+        <Modal title="Edit Task" onClose={() => setShowModal(false)} footer={
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" size="sm" onClick={() => setShowModal(false)}>Cancel</Btn>
+            <Btn variant="primary" size="sm" onClick={handleSave} disabled={saving || !title.trim()}>
+              {saving ? "Saving…" : "Save"}
+            </Btn>
+          </div>
+        }>
+          <FormGroup label="Title">
+            <Input value={title} onChange={e => setTitle(e.target.value)} autoFocus placeholder="Task title" />
+          </FormGroup>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <FormGroup label="Priority">
+              <Select value={priority} onChange={e => setPriority(e.target.value as any)}>
+                <option value="">None</option>
+                <option value="high">High</option>
+                <option value="med">Medium</option>
+                <option value="low">Low</option>
+              </Select>
+            </FormGroup>
+            <FormGroup label="Status">
+              <Select value={status} onChange={e => setStatus(e.target.value as any)}>
+                <option value="todo">To Do</option>
+                <option value="inprog">In Progress</option>
+                <option value="done">Done</option>
+              </Select>
+            </FormGroup>
+          </div>
+          <FormGroup label="Due Date">
+            <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+          </FormGroup>
+          <FormGroup label="Tags (comma-separated)">
+            <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="e.g. work, urgent" />
+          </FormGroup>
+          <FormGroup label="Notes">
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Optional notes…" />
+          </FormGroup>
+        </Modal>
       )}
     </div>
   );
@@ -308,9 +383,23 @@ function TaskTitle({ title, notes, isDone }: { title: string; notes?: string; is
   );
 }
 
-function ArchiveDelete({ archived, onArchive, onDelete }: { archived: boolean; onArchive: () => void; onDelete: () => void }) {
+function ArchiveDelete({ archived, onArchive, onDelete, onEdit }: { archived: boolean; onArchive: () => void; onDelete: () => void; onEdit: () => void }) {
   return (
     <div style={{ display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
+      <button
+        onClick={onEdit}
+        style={{
+          background: "rgba(100,160,255,0.1)", border: "1px solid rgba(100,160,255,0.3)",
+          color: "var(--accent2)", cursor: "pointer", padding: "4px 6px", borderRadius: 6,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+        title="Edit task"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      </button>
       <label style={{ display: "flex", cursor: "pointer", margin: 0, padding: 0 }}>
         <input
           type="checkbox"
