@@ -312,11 +312,11 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
           </div>
         }>
           <FormGroup label="Title">
-            <Input value={title} onChange={e => setTitle(e.target.value)} autoFocus placeholder="Task title" />
+            <Input value={title} onChange={setTitle} autoFocus placeholder="Task title" />
           </FormGroup>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <FormGroup label="Priority">
-              <Select value={priority} onChange={e => setPriority(e.target.value as any)}>
+              <Select value={priority} onChange={v => setPriority(v as any)}>
                 <option value="">None</option>
                 <option value="high">High</option>
                 <option value="med">Medium</option>
@@ -324,7 +324,7 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
               </Select>
             </FormGroup>
             <FormGroup label="Status">
-              <Select value={status} onChange={e => setStatus(e.target.value as any)}>
+              <Select value={status} onChange={v => setStatus(v as any)}>
                 <option value="todo">To Do</option>
                 <option value="inprog">In Progress</option>
                 <option value="done">Done</option>
@@ -332,13 +332,13 @@ export function AllTasksView({ userId, onNavigate }: { userId: string; onNavigat
             </FormGroup>
           </div>
           <FormGroup label="Due Date">
-            <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+            <Input type="date" value={dueDate} onChange={setDueDate} />
           </FormGroup>
           <FormGroup label="Tags (comma-separated)">
-            <Input value={tags} onChange={e => setTags(e.target.value)} placeholder="e.g. work, urgent" />
+            <Input value={tags} onChange={setTags} placeholder="e.g. work, urgent" />
           </FormGroup>
           <FormGroup label="Notes">
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Optional notes…" />
+            <Textarea value={notes} onChange={setNotes} rows={3} placeholder="Optional notes…" />
           </FormGroup>
         </Modal>
       )}
